@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from random import choice, randint
+from time import perf_counter as pf
 
 def NmToRGB(W):
     R2 = -(W - 440) / (440 - 380) if 380 <= W < 440 else 0 if 440 <= W < 510 or not 510 <= W < 781 else 1
@@ -22,7 +23,7 @@ class Maze:
     Continue: bool = field(default=True)
     Dir: list[tuple[int]] = field(default_factory=lambda: [(0, -1), (1, 0), (0, 1), (-1, 0)])
     Tiles: list = field(default_factory=list, init=False)
-    Hashes: map = field(default_factory=list, init=False)
+    Hashes: list[int] = field(default_factory=list, init=False)
 
     def __post_init__(self):
         Total = list(range(self.X*self.Y))
@@ -32,7 +33,7 @@ class Maze:
                 Idx = Total.pop(randint(0, len(Total)-1))
                 Colone.append(Tile((x, y), Idx, self))
             self.Tiles.append(Colone)
-        self.Hashes = map(lambda x: x.Hash, self.Tiles)
+        [self.Hashes.extend(list(map(lambda x: x.Hash, I))) for I in self.Tiles]
         
     def SameNumber(self):
         First = self.Hashes[0]
@@ -49,7 +50,7 @@ class Maze:
         self.RandomEntry()
 
     def GetWalls(self, x, y, Idx):
-        Tx, Ty = x+self.Dir[Idx], y+self.Dir[Idx]
+        Tx, Ty = x+self.Dir[Idx][0], y+self.Dir[Idx][1]
         if not (0 <= Tx < self.X and 0 <= Ty < self.Y):
             return
         return self.Tiles[Tx][Ty]
@@ -67,7 +68,8 @@ class Maze:
                     i.Hash = Max.Hash
                     i.Color = Max.Color
                     i.PathColor = Max.PathColor
-        self.Hashes = map(lambda x: x.Hash, self.Tiles)
+        self.Hashes = list()
+        [self.Hashes.extend(list(map(lambda x: x.Hash, I))) for I in self.Tiles]
 
     def RandomEntry(self):
         for i in range(2):
@@ -104,10 +106,10 @@ class Tile:
         self.Color = NmToRGB((self.Hash*400)/TOTAL+380)
         self.PathColor = map(lambda x: 255-x, self.Color)
     
-    def BreakWall(self, y):
+    def BreakWall(self):
         Neighbors = [self.ParentObject.GetWalls(*self.Pos, index) for index in range(4)]
         if not len(Neighbors): return
-        Neighbors = filter(lambda x: x.Hash != self.Hash, Neighbors)
+        Neighbors = list(filter(lambda x: x != None and x.Hash != self.Hash, Neighbors))
         
         NewTile = choice(Neighbors)
         self.ParentObject.NewNumber(self, NewTile)
@@ -117,7 +119,7 @@ class Tile:
         DP = 2*Dx - Dy
         Idx = abs(DP) + abs(DP)//DP
         self.Walls[Idx-2] = 0
-        NewTile.wall[Idx] = 0       
+        NewTile.Walls[Idx] = 0       
         
     def NewHash(self, Nbr):
         self.Hash = Nbr
@@ -125,6 +127,10 @@ class Tile:
         self.PathColor = map(lambda x: 255-x, self.Color)
 
 
-MX, MY = 10, 10
+MX, MY = 48, 27
 TOTAL = MX*MY
 T = Maze(MX,MY)
+
+deb = pf()
+T.CreateWalls()
+print(pf()-deb)
