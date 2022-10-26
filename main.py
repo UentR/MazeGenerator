@@ -3,7 +3,6 @@ from random import choice, randint
 
 
 def NmToRGB(W):
-    # Magic or Physic
     R2 = -(W - 440) / (440 - 380) if 380 <= W < 440 else 0 if 440 <= W < 510 or not 510 <= W < 781 else 1
     G2 = (W - 440) / (490 - 440) if 440 <= W < 490 else -(W - 645) / (
                 645 - 580) if 510 <= W < 645 else 1 if 490 <= W < 510 else 0
