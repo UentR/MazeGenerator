@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from random import choice
 
 
 def NmToRGB(W):
@@ -16,10 +17,10 @@ def NmToRGB(W):
     B = max(min(int(round(255 * (B2 * F2) ** .8, 0)), 255), 0)
     return R, G, B
 
-class Test:
+class Maze:
     def __init__(self) -> None:
         self.Nbr = 4
-        self.child = Tile((12, 13), 19)
+        self.child = Tile((12, 13), 19, self)
         
     def __repr__(self):
         return str(self.Nbr)
@@ -29,6 +30,7 @@ class Test:
 class Tile:
     Pos: tuple[int]
     Hash: int
+    ParentObject: Maze = field(repr=False)
     Walls: list[int] = field(default_factory=lambda: [1]*4)
     Color: tuple[int] = field(init=False, repr=False)
     PathColor: map = field(init=False, repr=False)
@@ -37,9 +39,16 @@ class Tile:
         self.Color = NmToRGB((self.Hash*400)/TOTAL+380)
         self.PathColor = map(lambda x: 255-x, self.Color)
     
-    def BreakWall(self, Nbr):
-        Neighbors = []
-        print(dir(super()))
+    def BreakWall(self, y):
+        Neighbors = [self.ParentObject.GetWalls(*self.Pos, index) for index in range(4)]
+        if not len(Neighbors): return
+        Neighbors = filter(lambda x: x.Hash != self.Hash, Neighbors)
+        
+        NewTile = choice(Neighbors)
+        self.ParentObject.NewNumber(self, NewTile)
+        
+        
+        
         
     def NewHash(self, Nbr):
         self.Hash = Nbr
@@ -49,8 +58,8 @@ class Tile:
 
 TOTAL = 190
 
-T = Test()
-T2 = Test()
+T = Maze()
+T2 = Maze()
 T.child.BreakWall(4)
 T.Nbr = 10
 T2.Nbr = 14
