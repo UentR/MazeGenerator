@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from random import choice
+from random import choice, randint
 
 
 def NmToRGB(W):
@@ -17,13 +17,25 @@ def NmToRGB(W):
     B = max(min(int(round(255 * (B2 * F2) ** .8, 0)), 255), 0)
     return R, G, B
 
-class Maze:
-    def __init__(self) -> None:
-        self.Nbr = 4
-        self.child = Tile((12, 13), 19, self)
+@dataclass
+class Maze(repr=False):
+    X: int = field(repr=True)
+    Y: int = field(repr=False)
+    Continue: bool = field(default=True, repr=False)
+    Dir: list[tuple[int]] = field(default_factory=[(0, -1), (1, 0), (0, 1), (-1, 0)], repr=False)
+    Tiles: list = field(default_factory=list, repr=False, init=False)
+
+    def __post_init__(self):
+        Total = range(self.X*self.Y)
+        for x in range(self.X):
+            Colone = list()
+            for y in range(self.Y):
+                Idx = Total.pop(randint(0, len(Total)))
+                Colone.append(Tile((x, y), Idx, self))
+            self.Tiles.append(Colone)
         
-    def __repr__(self):
-        return str(self.Nbr)
+    def SameNumber(self):
+        pass
 
 
 @dataclass
@@ -47,8 +59,12 @@ class Tile:
         NewTile = choice(Neighbors)
         self.ParentObject.NewNumber(self, NewTile)
         
-        
-        
+        Dx = NewTile.Pos[0] - self.Pos[0]
+        Dy = NewTile.Pos[1] - self.Pos[1]
+        DP = 2*Dx - Dy
+        Idx = abs(DP) + abs(DP)//DP
+        self.Walls[Idx-2] = 0
+        NewTile.wall[Idx] = 0       
         
     def NewHash(self, Nbr):
         self.Hash = Nbr
@@ -59,8 +75,4 @@ class Tile:
 TOTAL = 190
 
 T = Maze()
-T2 = Maze()
-T.child.BreakWall(4)
-T.Nbr = 10
-T2.Nbr = 14
-T.child.BreakWall(4)
+print(T)
