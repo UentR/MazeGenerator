@@ -135,3 +135,5 @@ T = Maze(MX,MY)
 deb = pf()
 T.CreateWalls()
 print((pf()-deb)/(10**9))
+with open('Out.txt', 'w') as X:
+    print(T.Tiles, file=X)
