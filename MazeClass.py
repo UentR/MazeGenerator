@@ -47,8 +47,6 @@ class Maze:
             x, y = choice(choice(self.Tiles)).Pos
             self.Tiles[x][y].BreakWall()
             self.SameNumber()
-            T += 1
-        print(T)
         self.RandomEntry()
 
     def GetWalls(self, x, y, Idx):
