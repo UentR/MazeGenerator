@@ -1,6 +1,8 @@
+from ast import Index
 from dataclasses import dataclass, field
 from random import choice, randint
 from time import perf_counter_ns as pf
+from numpy import mean
 
 def NmToRGB(W):
 	R2 = -(W - 440) / (440 - 380) if 380 <= W < 440 else 0 if 440 <= W < 510 or not 510 <= W < 781 else 1
@@ -24,6 +26,9 @@ class Maze:
 	Dir: list[tuple[int]] = field(default_factory=lambda: [(0, -1), (1, 0), (0, 1), (-1, 0)])
 	Tiles: list = field(default_factory=list, init=False)
 	Hashes: list[int] = field(default_factory=list, init=False)
+	Times0: list[float] = field(default_factory=list)
+	Times1: list[float] = field(default_factory=list)
+	Times2: list[float] = field(default_factory=list)
 
 	def __post_init__(self):
 		Total = list(range(self.X*self.Y))
@@ -36,17 +41,23 @@ class Maze:
 		[self.Hashes.extend(list(map(lambda x: x.Hash, I))) for I in self.Tiles]
 		
 	def SameNumber(self):
-		for x in self.Tiles:
-			if any(x):
+		First = self.Hashes[0]
+		for x in self.Hashes[1:]:
+			if not First == x:
 				return
 		self.Continue = False
 
 	def CreateWalls(self):
 		while self.Continue:
+			# D1 = pf()
 			Current = choice(choice(self.Tiles))
-			if Current == None: continue
-			Current.BreakWall()
+			# self.Times0.append(pf()-D1)
+			D2 = pf()
+			self.Times0.append(Current.BreakWall())
+			self.Times1.append(pf()-D2)
+			# D3 = pf()
 			self.SameNumber()
+			# self.Times2.append(pf()-D1)
 		self.RandomEntry()
 
 	def GetWalls(self, x, y, Idx):
@@ -56,6 +67,7 @@ class Maze:
 		return self.Tiles[Tx][Ty]
 
 	def NewNumber(self, First, Second):
+		D = pf()
 		N1, N2 = First.Hash, Second.Hash
 		C1, C2 = self.Hashes.count(N1), self.Hashes.count(N2)
 		
@@ -64,13 +76,13 @@ class Maze:
 		
 		for _ in self.Tiles:
 			for i in _:
-				if not i: continue
 				if i.Hash == Min.Hash:
-					i.Hash = Max.Hash
-					i.Color = Max.Color
-					i.PathColor = Max.PathColor
+					i(*Max)
+		
 		self.Hashes = list()
-		[self.Hashes.extend(list(map(lambda x: x.Hash if x!=None else -1, I))) for I in self.Tiles]
+		for _ in self.Tiles:
+			self.Hashes.extend(map(lambda x: x.Hash, _))
+		return pf() - D
 		
 	def RandomEntry(self):
 		for i in range(2):
@@ -92,9 +104,8 @@ class Maze:
 				self.DestroyWall(X, Y, 2)
 	
 	def DestroyWall(self, x, y, idx):
-		# self.Tiles[x][y].Walls[idx] = 0
-		pass   
-
+		self.Tiles[x][y].Walls[idx] = 0
+		
 @dataclass
 class Tile:
 	Pos: tuple[int]
@@ -109,34 +120,47 @@ class Tile:
 		self.PathColor = map(lambda x: 255-x, self.Color)
 	
 	def BreakWall(self):
-		
 		Neighbors = [self.ParentObject.GetWalls(*self.Pos, index) for index in range(4)]
 		Neighbors = list(filter(lambda x: x != None and x.Hash != self.Hash, Neighbors))
-		if not len(Neighbors): self.ParentObject.Tiles[self.Pos[0]][self.Pos[1]] = None; return
+		if not any(Neighbors): return -1
 		
-		NewTile = choice(Neighbors)
-		self.ParentObject.NewNumber(self, NewTile)
+		D = pf()
+		NewTile = choice(list(Neighbors))
+		Fin = self.ParentObject.NewNumber(self, NewTile)	
 		
+
 		Dx = NewTile.Pos[0] - self.Pos[0]
 		Dy = NewTile.Pos[1] - self.Pos[1]
 		DP = 2*Dx - Dy
 		Idx = abs(DP) + abs(DP)//DP
 		self.Walls[Idx-2] = 0
 		NewTile.Walls[Idx] = 0
-		self.ParentObject.Tiles[self.Pos[0]][self.Pos[1]] = self
+		return Fin
 		
 	def NewHash(self, Nbr):
 		self.Hash = Nbr
 		self.Color = NmToRGB((self.Hash*400)/TOTAL+380)
 		self.PathColor = map(lambda x: 255-x, self.Color)
 
+	def __call__(self, Hash, Color, SubColor):
+		self.Hash = Hash
+		self.Color = Color
+		self.PathColor = SubColor
 
-MX, MY = 96, 54
+	def __iter__(self):
+		return iter((self.Hash, self.Color, self.PathColor))
+
+
+NBR = 2
+MX, MY = 48*NBR, 27*NBR
 TOTAL = MX*MY
 T = Maze(MX,MY)
 
 deb = pf()
 T.CreateWalls()
 print((pf()-deb)/(10**9))
+print(mean(T.Times0))
+print(mean(list(filter(lambda x: x>=0, T.Times1))))
+# print(mean(T.Times2))
 with open('Out.txt', 'w') as X:
 	print(T.Tiles, file=X)
