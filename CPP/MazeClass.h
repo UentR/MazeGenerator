@@ -18,11 +18,8 @@ class Maze {
 		void RandomEntry();
 		void CreateWalls();
 		int BreakWall(Tile Current);
-
-	private:
-		bool Continue = true;
+		void PrintHash();
 		int Dir[4][2] = {{0,-1},{1,0},{0,1},{-1,0}};
-		int Total;
 };
 
 #endif

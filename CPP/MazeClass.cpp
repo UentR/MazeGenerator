@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <ctime>
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <tuple>
 using namespace std;
@@ -34,12 +35,15 @@ void Maze::Startup(int x, int y) {
 }
 
 void Maze::UpdateHashes() {
+	PrintHash();
 	Hashes.clear();
 	for (std::vector<Tile> i : Tiles) {
 		for (Tile Current : i) {
+			std::cout << Current.Hash << ", ";
 			Hashes.push_back(Current.Hash);
 		}
 	}
+	std::cout << "\n\n";
 }
 
 bool Maze::SameNumber() {
@@ -76,33 +80,49 @@ void Maze::RandomEntry() {
 	}
 }
 
+void Maze::DestroyWall(int x, int y, int idx) {
+	Tiles[x][y].Walls[idx] = 0;
+}
+
+
+
+
 void Maze::CreateWalls() {
-	// while (SameNumber()) {
-	for (int xo=0; xo<5; xo++) {
-		int DX = rand() % MX;
-		int DY = rand() % MY;
-		Tile Current = Tiles[DX][DY];
+	int DX, DY;
+	Tile Current;
+	ofstream File ("Test.txt");
+	for (int X : Hashes) {
+		File << X << ", ";
+	}
+	File.close();
+	srand(time(0));
+	while (SameNumber()) {
+		DX = rand() % MX;
+		DY = rand() % MY;
+		Current = Tiles[DX][DY];
 		BreakWall(Current);
+		// std::cout << ", " << Tiles[DX][DY].Hash << "\n";
 	}
 	// RandomEntry();
 }
-
 
 int Maze::BreakWall(Tile Current) {
 	int x = Current.Pos[0];
 	int y = Current.Pos[1];
 	int Hash = Current.Hash;
-
+	// std::cout << Hash << ", ";
+	
 	std::vector<std::tuple<Tile, int, int>> Neighbors;
+	std::tuple<Tile,int,int> Tamp;
 	for (int idx=0; idx<4; idx++) {
-		std::tuple<Tile,int,int> Tamp = GetWalls(x, y, idx);
+		Tamp = GetWalls(x, y, idx);
 		if (std::get<1>(Tamp)!=-2) {
 			if (std::get<0>(Tamp).Hash != Hash) {
 				Neighbors.push_back(Tamp);
 			}
 		}
-
 	}
+
 	if (Neighbors.size()==0) { return 1; }
 
 	int Idx = rand() % Neighbors.size();
@@ -115,26 +135,24 @@ int Maze::BreakWall(Tile Current) {
 	Idx = abs(DP) + abs(DP)/DP;
 	Current.Walls[Idx-2] = 0;
 	NewTile.Walls[Idx] = 0;
+	Tiles[x][y] = Current;
+	Tiles[x+Dx][y+Dy] = NewTile;
 	return 1;
-}
-
-
-
-
-void Maze::DestroyWall(int x, int y, int idx) {
-	Tiles[x][y].Walls[idx] = 0;
+	
 }
 
 
 
 std::tuple<Tile, int, int> Maze::GetWalls(int x, int y, int idx) {
-	int Tx = x+Dir[idx][0];
-	int Ty = y+Dir[idx][1];
-	if (!(0 <= Tx < MX && 0 <= Ty < MY)) {
+	int Tx = x + Dir[idx][0];
+	int Ty = y + Dir[idx][1];
+	if ((0>Tx)||(Tx>=MX)||(0>Ty)||(Ty>=MY)) {
 		return std::make_tuple(Tile(), -2, -1);
 	}
 	return std::make_tuple(Tiles[Tx][Ty], Dir[idx][0], Dir[idx][1]);
 }
+
+
 
 void Maze::NewNumber(Tile First, Tile Last) {
 	int C1, C2;
@@ -146,11 +164,23 @@ void Maze::NewNumber(Tile First, Tile Last) {
 	Max = C1 > C2 ? First : Last;
 	Min = C1 > C2 ? Last : First;
 
+	// PrintHash();
+
 	for (std::vector<Tile> Col : Tiles) {
 		for (Tile I : Col) {
 			if (I.Hash == Min.Hash) {
 				I.Hash = Min.Hash;
+				std::cout << I.Hash << ", ";
 			}
 		}
 	}
+	UpdateHashes();
+	// PrintHash();
+}
+
+void Maze::PrintHash() {
+	for (int X : Hashes) {
+		std::cout << X << ", ";
+	}
+	std::cout << "\n";
 }
