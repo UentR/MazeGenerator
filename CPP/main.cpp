@@ -7,5 +7,6 @@ int main() {
 	int C;
 	Maze T;
 	T.Startup(3, 5);
+	T.CreateWalls();
 	return 0;
 }

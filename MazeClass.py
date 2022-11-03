@@ -46,29 +46,40 @@ class Maze:
         First = self.Hashes[0]
         for x in self.Hashes[1:]:
             if not First == x:
-                return
-        self.Continue = False
+                return True
+        return False
 
 
     def CreateWalls(self):
-        while self.Continue:
-            # D1 = pf()
+        while self.SameNumber():
             Current = choice(choice(self.Tiles))
-            # self.Times0.append(pf()-D1)
-            D2 = pf()
-            self.Times0.append(Current.BreakWall())
-            self.Times1.append(pf()-D2)
-            # D3 = pf()
-            self.SameNumber()
-            # self.Times2.append(pf()-D1)
+            self.BreakWall(Current)
+            
         self.RandomEntry()
+
+    def BreakWall(self, Current):
+        Pos = Current.Pos
+        Hash = Current.Hash
+        
+        Neighbors = [self.GetWalls(*Pos, index) for index in range(4)]
+        Neighbors = list(filter(lambda x: x != None and x[0].Hash != Hash, Neighbors))
+        if not any(Neighbors): return
+        
+        NewTile, x, y = choice(Neighbors)
+        self.NewNumber(Current, NewTile)
+        
+        DP = 2*x - y
+        Idx = abs(DP) + abs(DP)//DP
+        Current.Walls[Idx-2] = 0
+        NewTile.Walls[Idx] = 0
+        
 
     def GetWalls(self, x, y, Idx):
         Tx, Ty = x+self.Dir[Idx][0], y+self.Dir[Idx][1]
         if not (0 <= Tx < self.X and 0 <= Ty < self.Y):
             return
-        return self.Tiles[Tx][Ty]
-
+        return self.Tiles[Tx][Ty], *self.Dir[Idx]
+        
     # Done
     def NewNumber(self, First, Second):
         D = pf()
@@ -136,30 +147,6 @@ class Tile:
         self.Color = NmToRGB((self.Hash*400)/TOTAL+380)
         self.PathColor = map(lambda x: 255-x, self.Color)
     
-    def BreakWall(self):
-        Neighbors = [self.ParentObject.GetWalls(*self.Pos, index) for index in range(4)]
-        Neighbors = list(filter(lambda x: x != None and x.Hash != self.Hash, Neighbors))
-        if not any(Neighbors): return -1
-        
-        D = pf()
-        NewTile = choice(list(Neighbors))
-        Fin = self.ParentObject.NewNumber(self, NewTile)	
-        
-
-        Dx = NewTile.Pos[0] - self.Pos[0]
-        Dy = NewTile.Pos[1] - self.Pos[1]
-        DP = 2*Dx - Dy
-        Idx = abs(DP) + abs(DP)//DP
-        self.Walls[Idx-2] = 0
-        NewTile.Walls[Idx] = 0
-        return Fin
-       
-    # Done 
-    def NewHash(self, Nbr):
-        self.Hash = Nbr
-        self.Color = NmToRGB((self.Hash*400)/TOTAL+380)
-        self.PathColor = map(lambda x: 255-x, self.Color)
-
     def __call__(self, Hash, Color, SubColor):
         self.Hash = Hash
         self.Color = Color
@@ -177,8 +164,5 @@ T = Maze(MX,MY)
 deb = pf()
 T.CreateWalls()
 print((pf()-deb)/(10**9))
-print(mean(T.Times0))
-print(mean(list(filter(lambda x: x>=0, T.Times1))))
-# print(mean(T.Times2))
 with open('Out.txt', 'w') as X:
     print(T.Tiles, file=X)
