@@ -1,7 +1,10 @@
 from dataclasses import dataclass, field
 from random import choice, randint
 from time import perf_counter_ns as pf
+from time import sleep
+import json
 from numpy import mean
+from multiprocessing import Manager
 
 def NmToRGB(W):
     R2 = -(W - 440) / (440 - 380) if 380 <= W < 440 else 0 if 440 <= W < 510 or not 510 <= W < 781 else 1
@@ -21,14 +24,11 @@ def NmToRGB(W):
 class Maze:
     X: int
     Y: int
+    # Tiles: Manager().list
+    Tiles: list = field(default_factory=list)
     Continue: bool = field(default=True)
-    Dir: list[tuple[int]] = field(default_factory=lambda: [(0, -1), (1, 0), (0, 1), (-1, 0)])
-    Tiles: list = field(default_factory=list, init=False)
+    Dir: list[tuple[int]] = field(default_factory=lambda: [(0, -1), (1, 0), (0, 1), (-1, 0)], init=False)
     Hashes: list[int] = field(default_factory=list, init=False)
-    
-    Times0: list[float] = field(default_factory=list)
-    Times1: list[float] = field(default_factory=list)
-    Times2: list[float] = field(default_factory=list)
 
     # Done
     def __post_init__(self):
@@ -37,81 +37,66 @@ class Maze:
             Colone = list()
             for y in range(self.Y):
                 Idx = Total.pop(randint(0, len(Total)-1))
-                Colone.append(Tile((x, y), Idx, self))
+                Colone.append(Tile((x, y), Idx, self.X*self.Y))
             self.Tiles.append(Colone)
         [self.Hashes.extend(list(map(lambda x: x.Hash, I))) for I in self.Tiles]
      
     # Done   
-    def SameNumber(self):
+    def __SameNumber(self):
         First = self.Hashes[0]
         for x in self.Hashes[1:]:
             if not First == x:
                 return True
         return False
 
-
     def CreateWalls(self):
-        while self.SameNumber():
+        T = 0
+        while self.__SameNumber():
             Current = choice(choice(self.Tiles))
-            self.BreakWall(Current)
-            
-        self.RandomEntry()
+            self.__BreakWall(Current)
+            T += 1
+        # self.__RandomEntry()
+        return T
 
-    def BreakWall(self, Current):
+    def __BreakWall(self, Current):
         Pos = Current.Pos
         Hash = Current.Hash
-        
-        Neighbors = [self.GetWalls(*Pos, index) for index in range(4)]
+        Neighbors = [self.__GetWalls(*Pos, index) for index in range(4)]
         Neighbors = list(filter(lambda x: x != None and x[0].Hash != Hash, Neighbors))
         if not any(Neighbors): return
         
         NewTile, x, y = choice(Neighbors)
-        self.NewNumber(Current, NewTile)
+        self.__NewNumber(Current, NewTile)
         
         DP = 2*x - y
         Idx = abs(DP) + abs(DP)//DP
         Current.Walls[Idx-2] = 0
         NewTile.Walls[Idx] = 0
         
-
-    def GetWalls(self, x, y, Idx):
+    def __GetWalls(self, x, y, Idx):
         Tx, Ty = x+self.Dir[Idx][0], y+self.Dir[Idx][1]
         if not (0 <= Tx < self.X and 0 <= Ty < self.Y):
             return
         return self.Tiles[Tx][Ty], *self.Dir[Idx]
         
     # Done
-    def NewNumber(self, First, Second):
-        D = pf()
-        
+    def __NewNumber(self, First, Second):
         N1, N2 = First.Hash, Second.Hash
         C1, C2 = self.Hashes.count(N1), self.Hashes.count(N2)
         
         Max = First if C1 > C2 else Second
         Min = Second if C1 > C2 else First
-        
-        for _ in self.Tiles:
-            for i in _:
+        for j in self.Tiles:
+            for i in j:
                 if i.Hash == Min.Hash:
                     i(*Max)
-        Fin = pf() - D
-        
-        D = pf()
+            
         self.Hashes = list()
         for _ in self.Tiles:
             self.Hashes.extend(map(lambda x: x.Hash, _))
-        
-        # Min = Min.Hash
-        # Max = Max.Hash
-        # for idx, i in enumerate(self.Hashes):
-        #     if i == Min:
-        #         self.Hashes[idx] = Max
-        
-        Fin = pf() - D
-        return Fin
-        
+            
     # Done
-    def RandomEntry(self):
+    def __RandomEntry(self):
         for i in range(2):
             Place = randint(0, 1)
             if Place:
@@ -122,47 +107,65 @@ class Maze:
                 Y = choice([0, self.Y-1])
             
             if X == 0:
-                self.DestroyWall(X, Y, 3)
+                self.__DestroyWall(X, Y, 3)
             elif X == len(self.Tiles) - 1:
-                self.DestroyWall(X, Y, 1)
+                self.__DestroyWall(X, Y, 1)
             if Y == 0:
-                self.DestroyWall(X, Y, 0)
+                self.__DestroyWall(X, Y, 0)
             elif Y == len(self.Tiles[X]) - 1:
-                self.DestroyWall(X, Y, 2)
+                self.__DestroyWall(X, Y, 2)
     
     # Done
-    def DestroyWall(self, x, y, idx):
+    def __DestroyWall(self, x, y, idx):
         self.Tiles[x][y].Walls[idx] = 0
         
 @dataclass
 class Tile:
     Pos: tuple[int]
     Hash: int
-    ParentObject: Maze = field(repr=False)
+    Total: int = field(repr=False)
     Walls: list[int] = field(default_factory=lambda: [1]*4)
-    Color: tuple[int] = field(init=False, repr=False)
-    PathColor: map = field(init=False, repr=False)
+    Color: hex = field(init=False, repr=False)
     
     def __post_init__(self):
-        self.Color = NmToRGB((self.Hash*400)/TOTAL+380)
-        self.PathColor = map(lambda x: 255-x, self.Color)
+        self.Color = NmToRGB((self.Hash*400)/self.Total+380)
     
-    def __call__(self, Hash, Color, SubColor):
+    def __call__(self, Hash, Color):
         self.Hash = Hash
         self.Color = Color
-        self.PathColor = SubColor
 
     def __iter__(self):
-        return iter((self.Hash, self.Color, self.PathColor))
+        return iter((self.Hash, self.Color))
 
 
-NBR = 2
-MX, MY = 48*NBR, 27*NBR
-TOTAL = MX*MY
-T = Maze(MX,MY)
+def Test(x, y, Final):
+    T = Maze(x, y)
+    d = pf()
+    T.CreateWalls()
+    Final[str(x*y)].append(pf()-d)
+    
 
-deb = pf()
-T.CreateWalls()
-print((pf()-deb)/(10**9))
-with open('Out.txt', 'w') as X:
-    print(T.Tiles, file=X)
+if __name__ == "__main__":
+    
+    # t = Maze(10, 10)
+    # D = pf()
+    # t.CreateWalls()
+    # print(pf()-D)
+    
+    Nbr = int(input('Nbr max x/y:\n'))
+    NBR = int(input('Nbr repeat:\n'))
+    Final = {str(x*y): [] for y in range(1, Nbr) for x in range(1, Nbr)}
+    R = pf()
+    
+    for _x in range(1, Nbr):
+        for _y in range(1, Nbr):
+            for outer in range(NBR):
+                T = Maze(_x,_y)
+                Fin = T.CreateWalls()
+                Final[str(_x*_y)].append(Fin)
+        print(_x)
+    print((pf()-R)/(10**9))
+    for Key, Value in Final.items():
+        Final[Key] = mean(Value)
+    with open('Out.json', 'w') as X:
+        json.dump(Final, X, indent=3)

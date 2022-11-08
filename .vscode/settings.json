@@ -83,6 +83,20 @@
 		"variant": "cpp"
 	},
 	"cSpell.ignoreWords": [
-		"TILECLASS"
+		"TILECLASS",
+		"matplotlib",
+		"pyplot"
+	],
+	"cSpell.words": [
+		"antialised",
+		"arange",
+		"cmap",
+		"colorbar",
+		"coolwarm",
+		"linewidth",
+		"meshgrid",
+		"ndmin",
+		"zaxis",
+		"zlim"
 	]
 }
