@@ -96,6 +96,8 @@
 		"linewidth",
 		"meshgrid",
 		"ndmin",
+		"quentin",
+		"xaxis",
 		"zaxis",
 		"zlim"
 	]

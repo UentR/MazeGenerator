@@ -1,10 +1,6 @@
-from time import perf_counter_ns as pf
 from random import randint as rd
 from random import shuffle, choice
 import numpy as np
-from numpy import mean
-import json
-from time import sleep
 
 
 def HexToRGB(Nbr):
@@ -120,29 +116,33 @@ class Maze:
 
 
 if __name__ == "__main__":
-    L = input()
-    while L not in ['T', 'O']:
-        L = input("Retry with T or O:\n")
+    from time import perf_counter_ns as pf
 
     Nbr = int(input('Nbr max x/y:\n'))
     NBR = int(input('Nbr repeat:\n'))
-    Final = {str(x*y): [] for y in range(1, Nbr) for x in range(1, Nbr)}
+    Final = {'T': {str(x*y): [] for y in range(1, Nbr) for x in range(1, Nbr)},'O': {str(x*y): [] for y in range(1, Nbr) for x in range(1, Nbr)}}
     R = pf()
     for _x in range(1, Nbr):
         for _y in range(1, Nbr):
             for outer in range(NBR):
                 D = pf()
                 T = Maze(_x,_y)
-                Fin = T.CreateWalls()
-                if L == "T":
-                    Fin = pf()-D
-                Final[str(_x*_y)].append(Fin)
+                O = T.CreateWalls()
+                T = pf() - D
+                Final['T'][str(_x*_y)].append(T)
+                Final['O'][str(_x*_y)].append(O)
         print(_x)
     print((pf()-R)/(10**9))
+    
+    from numpy import mean
     for Key, Value in Final.items():
-        Final[Key] = round(mean(Value), 2)
-    with open(f'data/Out2{L}.json', 'w') as X:
-        json.dump(Final, X, indent=3)
+        for key, value in Value.items():
+            Final[Key][key] = round(mean(value), 2)
+    
+    import json
+    for L in ['T', 'O']:
+        with open(f'data/Out1{L}.json', 'w') as X:
+            json.dump(Final[L], X, indent=3)
     
     
     

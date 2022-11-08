@@ -10,15 +10,20 @@ while L not in ['T', 'O']:
     L = input("Retry with T or O:\n")
 
 import json
-with open(f'data/Out{L}.json') as X:
-    data1 = json.load(X)
-with open(f"data/Out2{L}.json") as X:
-    data2 = json.load(X)
-
+data = []
+for index in range(2):
+    with open(f'data/Out{index}{L}.json') as X:
+        data.append(json.load(X))
+    
 fig, ax = plt.subplots()
 
-ax.plot(data1.keys(), data1.values(), c='r', label="Old")
-ax.plot(data2.keys(), data2.values(), c='g', label='New')
+Col = ['r', 'g']
+Name = ['Old', 'New']
+
+
+for index in range(2):
+    ax.plot(data[index].keys(), data[index].values(), c=Col[index], label=Name[index])
+
 
 ax.axes.get_xaxis().set_visible(False)
 

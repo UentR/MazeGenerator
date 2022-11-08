@@ -1,10 +1,5 @@
 from dataclasses import dataclass, field
 from random import choice, randint
-from time import perf_counter_ns as pf
-from time import sleep
-import json
-from numpy import mean
-from multiprocessing import Manager
 
 def NmToRGB(W):
     R2 = -(W - 440) / (440 - 380) if 380 <= W < 440 else 0 if 440 <= W < 510 or not 510 <= W < 781 else 1
@@ -146,13 +141,11 @@ def Test(x, y, Final):
     
 
 if __name__ == "__main__":
-    L = input()
-    while L not in ['T', 'O']:
-        L = input("Retry with T or O:\n")
+    from time import perf_counter_ns as pf
     
     Nbr = int(input('Nbr max x/y:\n'))
     NBR = int(input('Nbr repeat:\n'))
-    Final = {str(x*y): [] for y in range(1, Nbr) for x in range(1, Nbr)}
+    Final = {'T': {str(x*y): [] for y in range(1, Nbr) for x in range(1, Nbr)},'O': {str(x*y): [] for y in range(1, Nbr) for x in range(1, Nbr)}}
     R = pf()
     
     for _x in range(1, Nbr):
@@ -160,13 +153,20 @@ if __name__ == "__main__":
             for outer in range(NBR):
                 D = pf()
                 T = Maze(_x,_y)
-                Fin = T.CreateWalls()
-                if L == "T":
-                    Fin = pf() - D
-                Final[str(_x*_y)].append(Fin)
+                O = T.CreateWalls()
+                T = pf() - D
+                Final['T'][str(_x*_y)].append(T)
+                Final['O'][str(_x*_y)].append(O)
+                
         print(_x)
     print((pf()-R)/(10**9))
+    
+    from numpy import mean
     for Key, Value in Final.items():
-        Final[Key] = round(mean(Value), 2)
-    with open(f'data/Out{L}.json', 'w') as X:
-        json.dump(Final, X, indent=3)
+        for key, value in Value.items():
+            Final[Key][key] = round(mean(value), 2)
+    
+    import json
+    for L in ['T', 'O']:
+        with open(f'data/Out0{L}.json', 'w') as X:
+            json.dump(Final[L], X, indent=3)
