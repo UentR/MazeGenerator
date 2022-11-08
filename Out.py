@@ -5,11 +5,23 @@ import numpy as np
 
 use('Qt5Agg')
 
-import json
-with open('Out.json') as X:
-    data = json.load(X)
+L = input()
+while L not in ['T', 'O']:
+    L = input("Retry with T or O:\n")
 
-plt.plot(data.keys(), data.values())
+import json
+with open(f'data/Out{L}.json') as X:
+    data1 = json.load(X)
+with open(f"data/Out2{L}.json") as X:
+    data2 = json.load(X)
+
+fig, ax = plt.subplots()
+
+ax.plot(data1.keys(), data1.values(), c='r', label="Old")
+ax.plot(data2.keys(), data2.values(), c='g', label='New')
+
+ax.axes.get_xaxis().set_visible(False)
+
 plt.show()
 
 '''

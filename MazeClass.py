@@ -146,11 +146,9 @@ def Test(x, y, Final):
     
 
 if __name__ == "__main__":
-    
-    # t = Maze(10, 10)
-    # D = pf()
-    # t.CreateWalls()
-    # print(pf()-D)
+    L = input()
+    while L not in ['T', 'O']:
+        L = input("Retry with T or O:\n")
     
     Nbr = int(input('Nbr max x/y:\n'))
     NBR = int(input('Nbr repeat:\n'))
@@ -160,12 +158,15 @@ if __name__ == "__main__":
     for _x in range(1, Nbr):
         for _y in range(1, Nbr):
             for outer in range(NBR):
+                D = pf()
                 T = Maze(_x,_y)
                 Fin = T.CreateWalls()
+                if L == "T":
+                    Fin = pf() - D
                 Final[str(_x*_y)].append(Fin)
         print(_x)
     print((pf()-R)/(10**9))
     for Key, Value in Final.items():
-        Final[Key] = mean(Value)
-    with open('Out.json', 'w') as X:
+        Final[Key] = round(mean(Value), 2)
+    with open(f'data/Out{L}.json', 'w') as X:
         json.dump(Final, X, indent=3)

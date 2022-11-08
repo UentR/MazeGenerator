@@ -40,7 +40,6 @@ class Maze:
 
     def CreateWalls(self):
         t =0
-        sleep(5)
         while len(np.unique(self.Hashes)) != 1:
             idx = rd(0, self.Max-1)
             Hash = self.Hashes[idx]
@@ -71,9 +70,9 @@ class Maze:
         
         
     def __GetWalls(self, idx, Idx):
-        Dx = idx = self.Dir[Idx]
-        if Dx < 0 or Dx >= self.Max or (Dx%self.X==self.X-1 and idx%self.X==0) or (Dx%self.X==0 and idx%self.X==self.X-1):
-            return
+        Dx = idx + self.Dir[Idx]
+        if not 0 <= Dx < self.Max or abs(Dx%self.X - idx%self.X) > 1:
+                return
         return self.Hashes[Dx], Dx
         
     # Done
@@ -121,31 +120,37 @@ class Maze:
 
 
 if __name__ == "__main__":
-    # Nbr = int(input('Nbr max x/y:\n'))
-    # NBR = int(input('Nbr repeat:\n'))
-    # Final = {str(x*y): [] for y in range(1, Nbr) for x in range(1, Nbr)}
-    # R = pf()
-    # for _x in range(1, Nbr):
-    #     for _y in range(1, Nbr):
-    #         for outer in range(NBR):
-    #             print(_x, _y, outer)
-    #             T = Maze(_x,_y)
-    #             Fin = T.CreateWalls()
-    #             Final[str(_x*_y)].append(Fin)
-    #     print(_x)
-    # print((pf()-R)/(10**9))
-    # for Key, Value in Final.items():
-    #     Final[Key] = mean(Value)
-    # with open('Out2.json', 'w') as X:
-    #     json.dump(Final, X, indent=3)
+    L = input()
+    while L not in ['T', 'O']:
+        L = input("Retry with T or O:\n")
+
+    Nbr = int(input('Nbr max x/y:\n'))
+    NBR = int(input('Nbr repeat:\n'))
+    Final = {str(x*y): [] for y in range(1, Nbr) for x in range(1, Nbr)}
+    R = pf()
+    for _x in range(1, Nbr):
+        for _y in range(1, Nbr):
+            for outer in range(NBR):
+                D = pf()
+                T = Maze(_x,_y)
+                Fin = T.CreateWalls()
+                if L == "T":
+                    Fin = pf()-D
+                Final[str(_x*_y)].append(Fin)
+        print(_x)
+    print((pf()-R)/(10**9))
+    for Key, Value in Final.items():
+        Final[Key] = round(mean(Value), 2)
+    with open(f'data/Out2{L}.json', 'w') as X:
+        json.dump(Final, X, indent=3)
     
     
     
-    t = Maze(10, 10)
-    D = pf()
-    t.CreateWalls()
-    print(pf() - D)
-    t.ConvertCol()
+    # t = Maze(10, 10)
+    # D = pf()
+    # t.CreateWalls()
+    # print(pf() - D)
+    # t.ConvertCol()
     
     
     # print(t.GT/10**9, t.NT/10**9,t.ST/10**9, t.BT/10**9)
