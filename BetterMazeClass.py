@@ -41,6 +41,7 @@ class Maze:
             Hash = self.Hashes[idx]
             self.BreakWall(idx, Hash)
             t += 1
+            print(t)
         return t
         # self.__RandomEntry()
 
@@ -116,6 +117,9 @@ class Maze:
 
 
 if __name__ == "__main__":
+    Maze(50, 50).CreateWalls()
+    t = 5/0
+    
     from time import perf_counter_ns as pf
 
     Nbr = int(input('Nbr max x/y:\n'))
@@ -131,7 +135,7 @@ if __name__ == "__main__":
                 T = pf() - D
                 Final['T'][str(_x*_y)].append(T)
                 Final['O'][str(_x*_y)].append(O)
-        print(_x)
+        # print(_x)
     print((pf()-R)/(10**9))
     
     from numpy import mean

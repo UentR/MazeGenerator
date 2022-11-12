@@ -31,11 +31,11 @@ if __name__ == '__main__':
             print(_x)
         print((pf()-C)/(10**9))
         
-        from numpy import mean
+        from numpy import median
         for index in range(2):
             for Key, Value in Final[index].items():
                 for key, value in Value.items():
-                    Copy[index][Key][key] = round(mean(value), 2)
+                    Copy[index][Key][key] = round(median(value), 3)
         
         import json
         for index in range(2):
