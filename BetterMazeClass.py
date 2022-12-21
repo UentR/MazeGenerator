@@ -25,7 +25,6 @@ class Maze:
         
         self.Walls = np.array([15 for y in range(_y) for x in range(_x)])
         
-        
     # Done   
     def __SameNumber(self):
         First = self.Hashes[0]
@@ -35,14 +34,11 @@ class Maze:
         return False
 
     def CreateWalls(self):
-        t =0
         while len(np.unique(self.Hashes)) != 1:
             idx = rd(0, self.Max-1)
             Hash = self.Hashes[idx]
             self.BreakWall(idx, Hash)
-            t += 1
-            print(t)
-        return t
+        # return t
         # self.__RandomEntry()
 
     def BreakWall(self, Idx, Hash):
@@ -118,51 +114,3 @@ class Maze:
 
 if __name__ == "__main__":
     Maze(50, 50).CreateWalls()
-    t = 5/0
-    
-    from time import perf_counter_ns as pf
-
-    Nbr = int(input('Nbr max x/y:\n'))
-    NBR = int(input('Nbr repeat:\n'))
-    Final = {'T': {str(x*y): [] for y in range(1, Nbr) for x in range(1, Nbr)},'O': {str(x*y): [] for y in range(1, Nbr) for x in range(1, Nbr)}}
-    R = pf()
-    for _x in range(1, Nbr):
-        for _y in range(1, Nbr):
-            for outer in range(NBR):
-                D = pf()
-                T = Maze(_x,_y)
-                O = T.CreateWalls()
-                T = pf() - D
-                Final['T'][str(_x*_y)].append(T)
-                Final['O'][str(_x*_y)].append(O)
-        # print(_x)
-    print((pf()-R)/(10**9))
-    
-    from numpy import mean
-    for Key, Value in Final.items():
-        for key, value in Value.items():
-            Final[Key][key] = round(mean(value), 2)
-    
-    import json
-    for L in ['T', 'O']:
-        with open(f'data/Out1{L}.json', 'w') as X:
-            json.dump(Final[L], X, indent=3)
-    
-    
-    
-    # t = Maze(10, 10)
-    # D = pf()
-    # t.CreateWalls()
-    # print(pf() - D)
-    # t.ConvertCol()
-    
-    
-    # print(t.GT/10**9, t.NT/10**9,t.ST/10**9, t.BT/10**9)
-    # tt = 0
-    # for i in range(100):
-    #     t = Maze(25, 25)
-    #     t.CreateWalls()
-    #     tt += t.NT
-    #     print(i)
-    # print(tt/10**11)
-    # print([list(map(bin, x)) for x in t.Tiles])

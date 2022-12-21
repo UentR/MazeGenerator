@@ -10,25 +10,19 @@
 using namespace std;
 
 
-int check(const int a[][2], int n) {   
-    while(--n>0 && a[n]==a[0]);
-    return n!=0;
-}
-
 bool Continue(int *Arr, int Max) {
-	int First = -1;
-	for (int i=0; i<Max; i++) {
-		if (First == -1) { First = Arr[i]; }
-		else if (First != Arr[i]) { return true; }
+	int First = Arr[0];
+	for (int i=1; i<Max; i++) {
+		if (First != Arr[i]) { return true; }
 	}
 	return false;
 }
 
-vector<tuple<int, int>> GetWalls(int *Hashes, int Idx, int *Dir, int Max, int X) {
+vector<tuple<int, int>> GetWalls(int *Hashes, int Idx, int *Dir, int Max, int X, int Hash) {
 	vector<tuple<int, int>> Neighbors;
 	for (int i=0; i<4; i++) {
 		int Dx = Idx + Dir[i];
-		if (Dx>=0 && Dx<Max && abs(Dx%X-Idx%X)<=1) {
+		if (Dx>=0 && Dx<Max && abs(Dx%X-Idx%X)<=1 && !(Hash==Hashes[Dx])) {
 			Neighbors.push_back(make_tuple(Hashes[Dx], Dx));
 		}
 	}
@@ -60,12 +54,13 @@ void NewNumber(int *Hashes, int Hash, int NewTile, int n) {
 
 void BreakWall(int Idx, int Hash, int *Walls, int *Hashes, int *Dir, int Max, int X) {
 	vector<tuple<int, int>> Neighbors;
-	Neighbors = GetWalls(Hashes, Idx, Dir, Max, X);
+	Neighbors = GetWalls(Hashes, Idx, Dir, Max, X, Hash);
+	
 	for (auto i: Neighbors) {
-		cout << "(" << get<0>(i) << ", " << get<1>(i) << "), ";
+		cout << Hash << " (" << get<0>(i) << ", " << get<1>(i) << "), ";
 	}
 	cout << "\n";
-
+	
 	if (Neighbors.size()==0){ return; }
 
 	int idx = rand()%Neighbors.size();
@@ -74,28 +69,19 @@ void BreakWall(int Idx, int Hash, int *Walls, int *Hashes, int *Dir, int Max, in
 
 	NewNumber(Hashes, Hash, NewTile, Max);
 
-	int F = (Dx<-1) ? 0 : (Dx==1) ? 1 : (Dx>1) ? 2 : 3;
+	int F = (Dx<-1) ? 0 : (Dx==-1) ? 1 : (Dx==1) ? 2 : 3;
+	cout << Walls[Idx] << ", " << Walls[Dx] << ", " << F << "\n";
 	Walls[Idx] -= pow(2, F);
 	Walls[Dx] -= pow(2, 4-F);
 }
 
-int* CreateWalls(int *Walls, int *Hashes, int Max, int *Dir, int X) {
+void CreateWalls(int *Walls, int *Hashes, int Max, int *Dir, int X) {
 	srand(time(0));
-	int T = 0;
-	ofstream File ("Test.txt");
 	while (Continue(Hashes, Max)) {
 		int idx = rand() % Max;
-		File << idx << " : \t";
 		int Hash = Hashes[idx];
 		BreakWall(idx, Hash, Walls, Hashes, Dir, Max, X);
-		
-		for (int i=0; i<Max; i++) {
-			File << Hashes[i] << ", ";
-		}
-		File << "\n";
-		T++;
 	}
-	return Walls;
 }
 
 int Create(int x, int y) {
@@ -111,10 +97,12 @@ int Create(int x, int y) {
 	int Walls[Max];
 	fill_n(Walls, Max, 15);
 	
-	int* NWalls = CreateWalls(Walls, Hashes, Max, Dir, x);
+	CreateWalls(Walls, Hashes, Max, Dir, x);
+
+	cout << "\n\n";
 
 	for (int i=0; i<Max; i++) {
-		cout << Hashes[i] << ", " << Walls[i] << ", " << NWalls[i] << "\n";
+		cout << Hashes[i] << ", " << Walls[i] << "\n";
 	}
 
 	return 0;

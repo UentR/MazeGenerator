@@ -1,7 +1,8 @@
 import pygame
-from MazeClass import Maze
+from BetterMazeClass import Maze
 import multiprocessing
 from time import perf_counter_ns as pf
+from time import sleep
 
 class Screen:
     def __init__(self, SizeX: int, SizeY: int, /, *, x:int = None, y:int = None, CellSize:int = None, Fullscreen:bool = None) -> None:
@@ -67,18 +68,22 @@ class Screen:
 
 CalcSub = lambda x: tuple(map(lambda t: 255-t, x))
 
-# Display = Screen(5, 5)
+
 
 List = multiprocessing.Manager().list()
-L = Maze(5, 5, List)
-L.CreateWalls()
-P = multiprocessing.Process(target=L.CreateWalls)
+X, Y = 10, 10
+
+for i in range(X*Y):
+    List.append(15)
+
+L = Maze(X, Y)
+P = multiprocessing.Process(target=L.CreateWalls, args=(List,))
 P.start()
 
-with open('Out.txt', 'a') as X:
-    while P.is_alive():
-        Display(List)
-        print(List,file=X)
-        pygame.time.delay(1000)
-    print(List, file=X)
-    Display(List)
+while P.is_alive():
+    print(List)
+    sleep(0.2)
+    
+
+Show = Screen(X, Y)
+Show(List)
